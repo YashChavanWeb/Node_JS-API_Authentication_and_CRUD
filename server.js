@@ -1,4 +1,5 @@
-const express = require('express')
+const express = require('express');
+const errorHandler = require('./middleware/errorHandler');
 const dotenv = require('dotenv').config();
 
 const app = express();
@@ -8,8 +9,8 @@ app.listen(port, (req, res) => {
     console.log(`Server is running on ${port}`)
 })
 
-
+app.use(express.json())
 app.use('/api/contacts', require('./routes/contactRoutes'))
-
+app.use(errorHandler)
 
 

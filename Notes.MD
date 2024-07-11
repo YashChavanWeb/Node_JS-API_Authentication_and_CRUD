@@ -87,5 +87,32 @@ router.route('/').post(createContact)
 so we can add it in the same line as their route is similar that is /
 similarly do for put, get and delete
 
-# accepting the body of a request
+# accepting the body of a request in the controller
+
+- to accept the body we modify the get method
+const getContacts = (req, res) => {
+    console.log(req.body)
+    res.json({message: req.body})
+}
+
+- but now if we send the body then it will show undefined as we need to use a middleware to convert our request into json format
+- so we add middleware in the server.js file
+app.use(express.json())
+
+
+## here we do error handling and also destructuring
+const {name, email, phone} = req.body;
+    if(!name || !email || !phone) {
+        res.status(400)
+            throw new Error("Please enter all the fields")
+        }
+
+but with this logic we will get the messagge in the html format we want in json format
+so for this we need to create the middleware
+
+## Creating the middleware
+this is created as it will accept the req and the response
+and then in between it will transform the response into the json format
+
+Note: whenever we need to use middleware for the server we make use of the app.use()
 
