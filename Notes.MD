@@ -1,118 +1,234 @@
-# HTTP methods
+# Express API Setup and Basics
 
-- get - get data from the server
-- post - create own data and put on server
-- put - update the data
-- delete - delete a data
+## HTTP Methods
 
-# Creating Files
+- **GET** - Retrieve data from the server.
+- **POST** - Create data and send it to the server.
+- **PUT** - Update existing data on the server.
+- **DELETE** - Remove data from the server.
 
-- package.json - npm init -y
-- node modules - npm install express nodemon
-  Note: nodemon is used for restarting the server when we save the file again
-- we need to add scripts in package.json to start our server
-  "start": "nodemon server.js", etc
+## Creating Files
 
-# Basic structure to use express and run it on the port
+1. **Initialize a Node.js project:**
 
-const express = require('express')
-const dotenv = require('dotenv').config();
+   ```bash
+   npm init -y
+   ```
+
+2. **Install necessary modules:**
+
+   ```bash
+   npm install express nodemon
+   ```
+
+   - `nodemon` is used to automatically restart the server when files are saved.
+
+3. **Add scripts to `package.json`:**
+   ```json
+   "scripts": {
+     "start": "nodemon server.js"
+   }
+   ```
+
+## Basic Structure to Use Express and Run It on a Port
+
+```javascript
+const express = require("express");
+const dotenv = require("dotenv").config();
 
 const app = express();
-const port = process.env.PORT || 3000
+const port = process.env.PORT || 3000;
 
-app.listen(port, (req, res) => {
-console.log(`Server is running on ${port}`)
-})
-
-# Get api creation
-
-app.get('/api/contacts', (req, res) => {
-res.json({ message: 'Get all the contacts' });
-})
-
-Note: for text response use res.send() , for json response use res.json({})
-we can also use the status code res.status(200).json({})
-
-# Creating a folder to handle all the routes
-
-first create a file and then export router there
-const express = require('express');
-const router = express.Router();
-
-then we use route and get method to create the logic of the route
-router.route('/').get((req, res) => {
-res.json({ message: 'Get all the contacts' });
+app.listen(port, () => {
+  console.log(`Server is running on ${port}`);
 });
+```
 
-and finally we export it using module exports
-module.exports = router;
+## Creating a GET API
 
-now we use this from the file into our code using a middleware - use and also a require method
-app.use('/api/contacts', require('./routes/contactRoutes'))
+```javascript
+app.get("/api/contacts", (req, res) => {
+  res.json({ message: "Get all the contacts" });
+});
+```
 
-Different methods for API-
-GET - to get the data
-POST - to create the data
-PUT - to update the data
-DELETE - to delete the dataq
+- Use `res.send()` for text response.
+- Use `res.json()` for JSON response.
+- Use status code: `res.status(200).json({})`.
 
-How do we get the params of the id from the api
+## Creating a Folder to Handle All Routes
+
+1. **Create a route file and export the router:**
+
+   ```javascript
+   const express = require("express");
+   const router = express.Router();
+
+   router.route("/").get((req, res) => {
+     res.json({ message: "Get all the contacts" });
+   });
+
+   module.exports = router;
+   ```
+
+2. **Use this route in your main server file:**
+   ```javascript
+   app.use("/api/contacts", require("./routes/contactRoutes"));
+   ```
+
+## API Methods
+
+- **GET** - Retrieve data.
+- **POST** - Create data.
+- **PUT** - Update data.
+- **DELETE** - Delete data.
+
+## Getting Params from the URL
+
+```javascript
 res.json({ message: `Delete this contact ${req.params.id}` });
-the id is extracted from the url string http://localhost:5000/api/contacts/2
+```
 
-# creating a folder for the controller
+- Extract ID from the URL string: `http://localhost:5000/api/contacts/2`.
 
-- controller will have the logic for the request and response and we will also interact with the database
-- we give a variable name to the router in the controller
-  const getContacts = (req, res) => {
-  res.json({ msg: 'Get all contacts' })
-  }
-- then export it as
-  module.exports = { getContacts }
+## Creating a Folder for the Controller
 
-- then we have its importing and usage in the routes file
-  const {
-  getContacts, getContact, createContact, updateContact, deleteContact
-  } = require('../controllers/contactController')
-  router.route('/').get(getContacts);
+1. **Create controller logic:**
 
-- now that we have all the files one optimization as two routes are same
-  // route for getting all the contacts
-  router.route('/').get(getContacts);
+   ```javascript
+   const getContacts = (req, res) => {
+     res.json({ msg: "Get all contacts" });
+   };
 
-// route for adding a contact
-router.route('/').post(createContact)
+   module.exports = { getContacts };
+   ```
 
-so we can add it in the same line as their route is similar that is /
-similarly do for put, get and delete
+2. **Import and use in the routes file:**
 
-# accepting the body of a request in the controller
+   ```javascript
+   const {
+     getContacts,
+     getContact,
+     createContact,
+     updateContact,
+     deleteContact,
+   } = require("../controllers/contactController");
 
-- to accept the body we modify the get method
-const getContacts = (req, res) => {
-    console.log(req.body)
-    res.json({message: req.body})
-}
+   router.route("/").get(getContacts);
+   ```
 
-- but now if we send the body then it will show undefined as we need to use a middleware to convert our request into json format
-- so we add middleware in the server.js file
-app.use(express.json())
+3. **Optimize routes with similar paths:**
 
+   ```javascript
+   router.route("/").get(getContacts).post(createContact);
 
-## here we do error handling and also destructuring
-const {name, email, phone} = req.body;
-    if(!name || !email || !phone) {
-        res.status(400)
-            throw new Error("Please enter all the fields")
-        }
+   router
+     .route("/:id")
+     .put(updateContact)
+     .get(getContact)
+     .delete(deleteContact);
+   ```
 
-but with this logic we will get the messagge in the html format we want in json format
-so for this we need to create the middleware
+## Accepting the Body of a Request in the Controller
 
-## Creating the middleware
-this is created as it will accept the req and the response
-and then in between it will transform the response into the json format
+1. **Modify the method to accept the body:**
 
-Note: whenever we need to use middleware for the server we make use of the app.use()
+   ```javascript
+   const getContacts = (req, res) => {
+     console.log(req.body);
+     res.json({ message: req.body });
+   };
+   ```
 
+2. **Use middleware to parse JSON:**
+
+   ```javascript
+   app.use(express.json());
+   ```
+
+3. **Error handling and destructuring:**
+   ```javascript
+   const { name, email, phone } = req.body;
+   if (!name || !email || !phone) {
+     res.status(400);
+     throw new Error("Please enter all the fields");
+   }
+   ```
+
+## Creating Custom Middleware
+
+1. **Error handler middleware:**
+
+   ```javascript
+   const errorHandler = (err, req, res, next) => {
+     const statusCode = res.statusCode ? res.statusCode : 500;
+     res.json({ message: err.message, stackTrace: err.stack });
+   };
+
+   module.exports = errorHandler;
+   ```
+
+2. **Use middleware in the server:**
+   ```javascript
+   app.use(errorHandler);
+   ```
+
+## Creating a Switch Case and Separate File for Error Codes
+
+1. **Switch case for error codes:**
+
+   ```javascript
+   switch (statusCode) {
+     case constants.VALIDATION_ERROR:
+       res.json({
+         title: "Validation Error",
+         message: err.message,
+         stackTrace: err.stack,
+       });
+       break;
+
+     case constants.SERVER_ERROR:
+       res.json({
+         title: "Server Error",
+         message: err.message,
+         stackTrace: err.stack,
+       });
+       break;
+
+     default:
+       console.log("No error, all good");
+   }
+   ```
+
+2. **Error codes in a constants file:**
+   ```javascript
+   exports.constants = {
+     VALIDATION_ERROR: 400,
+     UNAUTHORIZED: 401,
+     FORBIDDEN: 403,
+     NOT_FOUND: 404,
+     SERVER_ERROR: 500,
+   };
+   ```
+
+## Async Handler
+
+1. **Handle async operations:**
+
+   - When interacting with the MongoDB, use `async` and `await`.
+
+2. **Use `express-async-handler` to handle errors:**
+
+   ```bash
+   npm install express-async-handler
+   ```
+
+3. **Import and use in the controller:**
+
+   ```javascript
+   const asyncHandler = require("express-async-handler");
+
+   const getContacts = asyncHandler(async (req, res) => {
+     // Your async code here
+   });
+   ```
