@@ -6,11 +6,11 @@ const Contact = require('../models/contactModel')
 
 // @desc Get all contacts
 // @route GET /api/contacts
-// @access public
+// @access private
 const getContacts = asyncHandler(async (req, res) => {
 
 
-    const contacts = await Contact.find();
+    const contacts = await Contact.find({ user_id: req.user.id });
     res.status(200).json(contacts);
 
     // res.status(200).json({ msg: 'Get all contacts' })
@@ -21,7 +21,7 @@ const getContacts = asyncHandler(async (req, res) => {
 
 // @desc Get the contact
 // @route GET /api/contacts/:id
-// @access public
+// @access private
 const getContact = asyncHandler(async (req, res) => {
 
     const contact = await Contact.findById(req.params.id)
@@ -38,7 +38,7 @@ const getContact = asyncHandler(async (req, res) => {
 
 // @desc Create a new contact
 // @route POST /api/contacts
-// @access public
+// @access private
 const createContact = asyncHandler(async (req, res) => {
 
     // destructuring and error handling when we get an empty object
@@ -59,6 +59,7 @@ const createContact = asyncHandler(async (req, res) => {
             name,
             email,
             phone,
+            user_id: req.user.id
         }
         // we have already destructured the name email and phone above in req.body so here we directly use them as key name and value name is the same
     )
@@ -72,7 +73,7 @@ const createContact = asyncHandler(async (req, res) => {
 
 // @desc Update a contact
 // @route PUT /api/contacts/:id
-// @access public
+// @access private
 const updateContact = asyncHandler(async (req, res) => {
 
     const contact = await Contact.findById(req.params.id)
@@ -80,6 +81,13 @@ const updateContact = asyncHandler(async (req, res) => {
     if (!contact) {
         res.status(404);
         throw new Error("Contact not found");
+    }
+
+    if (contact.user_id.toString() !== req.user.id) {
+
+        // this means that some different user is trying to update the contact so show error
+        res.status(401)
+        throw new Error("Not authorized to update this contact")
     }
 
     const updatedContact = await Contact.findByIdAndUpdate(
@@ -99,13 +107,20 @@ const updateContact = asyncHandler(async (req, res) => {
 
 // @desc Delete a contact
 // @route DELETE /api/contacts/:id
-// @access public
+// @access private 
 const deleteContact = asyncHandler(async (req, res) => {
     const contact = await Contact.findById(req.params.id);
 
     if (!contact) {
         res.status(404);
         throw new Error("Contact not found");
+    }
+
+    if (contact.user_id.toString() !== req.user.id) {
+
+        // this means that some different user is trying to delete the contact so show error
+        res.status(401)
+        throw new Error("Not authorized to delete this contact")
     }
 
     // delete the contact we got

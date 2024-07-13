@@ -2,7 +2,14 @@ const express = require('express');
 const router = express.Router();
 const {
     getContacts, getContact, createContact, updateContact, deleteContact
-} = require('../controllers/contactController')
+} = require('../controllers/contactController');
+const validateToken = require('../middleware/validateTokenHandler');
+
+
+
+router.use(validateToken)   // this way we will make all the routes as private
+// router.get('/current', validateToken, currentUser)   // if we want to add individually then we can do like this
+
 
 
 // // route for getting all the contacts
