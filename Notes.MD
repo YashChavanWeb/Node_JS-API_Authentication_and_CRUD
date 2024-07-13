@@ -24,6 +24,7 @@
    - `nodemon` is used to automatically restart the server when files are saved.
 
 3. **Add scripts to `package.json`:**
+
    ```json
    "scripts": {
      "start": "nodemon server.js"
@@ -72,6 +73,7 @@ app.get("/api/contacts", (req, res) => {
    ```
 
 2. **Use this route in your main server file:**
+
    ```javascript
    app.use("/api/contacts", require("./routes/contactRoutes"));
    ```
@@ -147,6 +149,7 @@ res.json({ message: `Delete this contact ${req.params.id}` });
    ```
 
 3. **Error handling and destructuring:**
+
    ```javascript
    const { name, email, phone } = req.body;
    if (!name || !email || !phone) {
@@ -169,6 +172,7 @@ res.json({ message: `Delete this contact ${req.params.id}` });
    ```
 
 2. **Use middleware in the server:**
+
    ```javascript
    app.use(errorHandler);
    ```
@@ -201,6 +205,7 @@ res.json({ message: `Delete this contact ${req.params.id}` });
    ```
 
 2. **Error codes in a constants file:**
+
    ```javascript
    exports.constants = {
      VALIDATION_ERROR: 400,
@@ -232,3 +237,154 @@ res.json({ message: `Delete this contact ${req.params.id}` });
      // Your async code here
    });
    ```
+
+## Connecting to MongoDB Database
+
+1. **Create a MongoDB project and cluster:**
+
+   - Create a project in MongoDB Atlas.
+   - Inside the project, create a cluster.
+   - Inside the cluster, create a database.
+
+2. **Install MongoDB extension in VS Code:**
+
+   - Go to extensions and search for MongoDB.
+   - Install the MongoDB extension.
+   - Add a connection by pasting the connection string along with the database name and cluster password.
+
+3. **Connect your application with MongoDB:**
+
+   - Copy the "Connect with Driver" string and add it to the environment variables.
+   - Install Mongoose:
+
+     ```bash
+     npm install mongoose
+     ```
+
+   - Create a config folder and a `dbConnection.js` file:
+
+     ```javascript
+     const mongoose = require("mongoose");
+
+     const connectDB = async () => {
+       try {
+         await mongoose.connect(process.env.CONNECTION_STRING);
+         console.log(
+           `MongoDB Connected: ${mongoose.connection.host} and ${mongoose.connection.name}`
+         );
+       } catch (err) {
+         console.error(`MongoDB connection error: ${err.message}`);
+         process.exit(1);
+       }
+     };
+
+     module.exports = connectDB;
+     ```
+
+## Mongoose Schema Model for Contacts
+
+Create a Mongoose schema for contacts:
+
+```javascript
+const mongoose = require("mongoose");
+
+const contactSchema = mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "Please enter the contact name"],
+    },
+    email: {
+      type: String,
+      required: [true, "Please enter the email"],
+    },
+    phone: {
+      type: String,
+      required: [true, "Please enter the phone number"],
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+module.exports = mongoose.model("Contact", contactSchema);
+```
+
+- `mongoose.Schema({ ... })` creates a new Mongoose schema called `contactSchema`.
+- Each field uses `required: [true, "..."]` to specify that the field is required for the document to be valid. If any of these fields are missing, Mongoose will throw an error with the corresponding message.
+- `timestamps: true` automatically adds `createdAt` and `updatedAt` fields to the schema.
+- `mongoose.model('Contact', contactSchema)` creates a Mongoose model named 'Contact' based on the `contactSchema` defined earlier.
+
+## CRUD Operations and Storing Data in MongoDB
+
+1. **Create (C) - Create Contact:**
+
+   ```javascript
+   const createContact = asyncHandler(async (req, res) => {
+     const { name, email, phone } = req.body;
+     if (!name || !email || !phone) {
+       res.status(400);
+       throw new Error("Please enter all the fields");
+     }
+     const contact = await Contact.create({
+       name,
+       email,
+       phone,
+     });
+     res.status(200).json(contact);
+   });
+   ```
+
+2. **Read (R) - Get All Contacts:**
+
+   ```javascript
+   const getContacts = asyncHandler(async (req, res) => {
+     const contacts = await Contact.find();
+     res.status(200).json(contacts);
+   });
+   ```
+
+3. **Read (R) - Get Contact by ID:**
+
+   ```javascript
+   const getContact = asyncHandler(async (req, res) => {
+     const contact = await Contact.findById(req.params.id);
+     if (!contact) {
+       res.status(404);
+       throw new Error("Contact not found");
+     }
+     res.status(200).json(contact);
+   });
+   ```
+
+4. **Update (U) - Update Contact:**
+
+   ```javascript
+   const updateContact = asyncHandler(async (req, res) => {
+     const updatedContact = await Contact.findByIdAndUpdate(
+       req.params.id,
+       req.body,
+       { new:
+   ```
+
+true }
+);
+res.status(200).json(updatedContact);
+});
+
+````
+
+5. **Delete (D) - Delete Contact:**
+
+```javascript
+const deleteContact = asyncHandler(async (req, res) => {
+  const contact = await Contact.findById(req.params.id);
+  if (!contact) {
+    res.status(404);
+    throw new Error("Contact not found");
+  }
+  await Contact.deleteOne({ _id: req.params.id });
+  res.status(200).json({ message: 'Contact removed' });
+});
+````
