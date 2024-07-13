@@ -365,15 +365,11 @@ module.exports = mongoose.model("Contact", contactSchema);
      const updatedContact = await Contact.findByIdAndUpdate(
        req.params.id,
        req.body,
-       { new:
+       { new: true }
+     );
+     res.status(200).json(updatedContact);
+   });
    ```
-
-true }
-);
-res.status(200).json(updatedContact);
-});
-
-````
 
 5. **Delete (D) - Delete Contact:**
 
@@ -385,6 +381,6 @@ const deleteContact = asyncHandler(async (req, res) => {
     throw new Error("Contact not found");
   }
   await Contact.deleteOne({ _id: req.params.id });
-  res.status(200).json({ message: 'Contact removed' });
+  res.status(200).json({ message: "Contact removed" });
 });
-````
+```
